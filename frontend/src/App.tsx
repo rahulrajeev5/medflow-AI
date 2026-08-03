@@ -68,6 +68,21 @@ function formatProcessingTime(milliseconds: number | null): string {
 function App() {
 
   const auth = useAuth();
+
+  const signOutRedirect = () => {
+  const clientId = '3pd6tem71q5vf35cbn3rqchhpt';
+  const logoutUri = 'http://localhost:5173';
+  const cognitoDomain =
+    'https://eu-central-1t23sf3gb5.auth.eu-central-1.amazoncognito.com';
+
+  void auth.removeUser();
+
+  window.location.href =
+    `${cognitoDomain}/logout` +
+    `?client_id=${clientId}` +
+    `&logout_uri=${encodeURIComponent(logoutUri)}`;
+};
+
     useEffect(() => {
     setAccessToken(
       auth.user?.access_token ?? null,
@@ -210,26 +225,99 @@ function App() {
     );
   }
 
-  if (!auth.isAuthenticated) {
-    return (
-      <div className="app-shell">
-        <main className="main-content">
-          <h1>MedFlow AI</h1>
+  
+if (!auth.isAuthenticated) {
+  return (
+    <main className="login-page">
+      <section className="login-hero">
+        <div className="login-brand">
+          <div className="brand-mark">M</div>
+          <strong>MedFlow AI</strong>
+        </div>
+
+        <div className="login-copy">
+          <p className="login-eyebrow">
+            AI-POWERED DOCUMENT INTELLIGENCE
+          </p>
+
+          <h1>
+            Scan medical documents.
+            <span> Get structured reports in seconds.</span>
+          </h1>
+
+          <p className="login-description">
+            Upload medical documents, extract text with OCR, and
+            generate clear summaries and structured insights using
+            a secure AWS-powered processing pipeline.
+          </p>
+
+          <div className="login-features">
+            <div>
+              <UploadCloud size={22} />
+              <span>
+                <strong>Upload securely</strong>
+                PDF, PNG and JPG documents
+              </span>
+            </div>
+
+            <div>
+              <FileText size={22} />
+              <span>
+                <strong>Automatic OCR</strong>
+                Extract readable text instantly
+              </span>
+            </div>
+
+            <div>
+              <Activity size={22} />
+              <span>
+                <strong>AI analysis</strong>
+                Summaries and structured results
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <p className="login-disclaimer">
+          Demo environment. Use synthetic or non-sensitive data only.
+        </p>
+      </section>
+
+      <section className="login-panel">
+        <div className="login-card">
+          <div className="login-icon">
+            <ShieldCheck size={30} />
+          </div>
+
+          <p className="login-eyebrow">SECURE ACCESS</p>
+          <h2>Welcome to MedFlow AI</h2>
 
           <p>
-            Please sign in to continue.
+            Sign in to upload documents, track processing progress,
+            and review AI-generated reports.
           </p>
 
           <button
-            className="primary-button"
-            onClick={() => auth.signinRedirect()}
+            type="button"
+            className="login-button"
+            onClick={() => void auth.signinRedirect()}
           >
-            Sign In
+            Continue with secure sign in
+            <ChevronRight size={19} />
           </button>
-        </main>
-      </div>
-    );
-  }
+
+          <div className="login-security">
+            <ShieldCheck size={16} />
+            Authentication powered by Amazon Cognito
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+
+
 
   return (
   
@@ -260,7 +348,28 @@ function App() {
             <p className="eyebrow">AI WORKFLOW DEMO</p>
             <h1>{page === 'dashboard' ? 'Medical Document Processing' : page === 'documents' ? 'Document History' : page === 'monitoring' ? 'System Monitoring' : 'Document Analysis'}</h1>
           </div>
-          <div className="profile"><span>RM</span><div><strong>Rahul Mudatholy</strong><small>Backend Engineer</small></div></div>
+          <div className="profile">
+            <span>
+              {String(auth.user?.profile.email ?? 'U')
+                .charAt(0)
+                .toUpperCase()}
+            </span>
+
+            <div>
+              <strong>
+                {String(auth.user?.profile.email ?? 'Signed-in user')}
+              </strong>
+              <small>Authenticated with Cognito</small>
+            </div>
+
+            <button
+              type="button"
+              className="text-button"
+              onClick={signOutRedirect}
+            >
+              Sign out
+            </button>
+          </div>
         </header>
 
         {error && <div className="notice"><AlertTriangle size={18} />{error}</div>}

@@ -20,8 +20,19 @@ from app.models.document import Document, DocumentStatus
 settings = get_settings()
 import os
 
+
 if os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
     pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
+else:
+    pytesseract.pytesseract.tesseract_cmd = settings.tesseract_path
+
+import os
+import shutil
+
+tesseract_binary = shutil.which("tesseract")
+
+if tesseract_binary:
+    pytesseract.pytesseract.tesseract_cmd = tesseract_binary
 else:
     pytesseract.pytesseract.tesseract_cmd = settings.tesseract_path
 

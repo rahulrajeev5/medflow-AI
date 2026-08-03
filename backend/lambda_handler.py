@@ -2,7 +2,7 @@ import json
 import logging
 import uuid
 
-from app.processor import process_document
+from app.services.document_processor import process_document
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)

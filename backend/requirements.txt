@@ -8,3 +8,4 @@ pytesseract==0.3.13
 Pillow==11.1.0
 PyMuPDF==1.25.1
 boto3
+awslambdaric

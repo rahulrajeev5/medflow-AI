@@ -7,7 +7,7 @@ import uuid
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 
-from app.api.documents import process_document
+from app.services.document_processor import process_document
 from app.core.config import get_settings
 
 

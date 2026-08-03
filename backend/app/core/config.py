@@ -1,5 +1,6 @@
 from functools import lru_cache
 from pathlib import Path
+import os
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -10,12 +11,17 @@ class Settings(BaseSettings):
     database_url: str | None = None
     db_secret_name: str | None = None
 
-    upload_dir: Path = Path("uploads")
+    upload_dir: Path = Path(
+    "/tmp/uploads"
+    if os.getenv("AWS_LAMBDA_FUNCTION_NAME")
+    else "uploads"
+)
     max_upload_mb: int = 10
 
     allowed_origins: list[str] = [
-        "http://localhost:5173",
-    ]
+    "http://localhost:5173",
+    "https://d1d8yct7oy0z3l.cloudfront.net",
+]
 
     aws_profile: str | None = None
     aws_region: str = "eu-central-1"

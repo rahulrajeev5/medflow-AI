@@ -20,7 +20,8 @@ export type ApiDocument = {
   updated_at?: string;
 };
 
-const API_BASE = 'http://localhost:8000/api/v1';
+const API_BASE =
+  'https://m0s6u27exj.execute-api.eu-central-1.amazonaws.com/api/v1';
 
 let accessToken: string | null = null;
 

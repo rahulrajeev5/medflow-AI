@@ -66,22 +66,25 @@ function formatProcessingTime(milliseconds: number | null): string {
 }
 
 function App() {
-
   const auth = useAuth();
 
   const signOutRedirect = () => {
-  const clientId = '3pd6tem71q5vf35cbn3rqchhpt';
-  const logoutUri = 'http://localhost:5173';
-  const cognitoDomain =
-    'https://eu-central-1t23sf3gb5.auth.eu-central-1.amazoncognito.com';
+    const clientId = '3pd6tem71q5vf35cbn3rqchhpt';
 
-  void auth.removeUser();
+    const logoutUri =
+      import.meta.env.VITE_APP_URL ??
+      'http://localhost:5173';
 
-  window.location.href =
-    `${cognitoDomain}/logout` +
-    `?client_id=${clientId}` +
-    `&logout_uri=${encodeURIComponent(logoutUri)}`;
-};
+    const cognitoDomain =
+      'https://eu-central-1t23sf3gb5.auth.eu-central-1.amazoncognito.com';
+
+    void auth.removeUser();
+
+    window.location.href =
+      `${cognitoDomain}/logout` +
+      `?client_id=${clientId}` +
+      `&logout_uri=${encodeURIComponent(logoutUri)}`;
+  };
 
     useEffect(() => {
     setAccessToken(

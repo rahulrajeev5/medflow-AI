@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useAuth } from "react-oidc-context";
 import {
   Activity,
   AlertTriangle,
@@ -17,6 +18,7 @@ import {
   ApiDocumentStatus,
   getDocument,
   listDocuments,
+  setAccessToken,
   uploadDocument,
 } from './api';
 
@@ -64,6 +66,15 @@ function formatProcessingTime(milliseconds: number | null): string {
 }
 
 function App() {
+
+  const auth = useAuth();
+    useEffect(() => {
+    setAccessToken(
+      auth.user?.access_token ?? null,
+    );
+  }, [auth.user?.access_token]);
+
+
   const [page, setPage] = useState<Page>('dashboard');
   const [documents, setDocuments] = useState<ApiDocument[]>([]);
   const [selectedDocument, setSelectedDocument] = useState<ApiDocument | null>(null);
@@ -87,8 +98,19 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (
+      !auth.isAuthenticated ||
+      !auth.user?.access_token
+    ) {
+      return;
+    }
+
     void loadDocuments();
-  }, [loadDocuments]);
+  }, [
+    auth.isAuthenticated,
+    auth.user?.access_token,
+    loadDocuments,
+  ]);
 
   useEffect(() => {
     const hasActiveDocuments = documents.some((doc) =>
@@ -167,7 +189,50 @@ function App() {
     }
   };
 
+    if (auth.isLoading) {
+    return (
+      <div className="app-shell">
+        <main className="main-content">
+          <h2>Loading authentication...</h2>
+        </main>
+      </div>
+    );
+  }
+
+  if (auth.error) {
+    return (
+      <div className="app-shell">
+        <main className="main-content">
+          <h2>Authentication Error</h2>
+          <p>{auth.error.message}</p>
+        </main>
+      </div>
+    );
+  }
+
+  if (!auth.isAuthenticated) {
+    return (
+      <div className="app-shell">
+        <main className="main-content">
+          <h1>MedFlow AI</h1>
+
+          <p>
+            Please sign in to continue.
+          </p>
+
+          <button
+            className="primary-button"
+            onClick={() => auth.signinRedirect()}
+          >
+            Sign In
+          </button>
+        </main>
+      </div>
+    );
+  }
+
   return (
+  
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">

@@ -13,6 +13,9 @@ from app.db.session import get_db
 from app.models.document import Document, DocumentStatus
 from app.schemas.document import DocumentListItem, DocumentRead
 from app.services.sqs import send_processing_message
+from typing import Any
+
+from app.auth.cognito import get_current_user
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 settings = get_settings()
@@ -91,7 +94,9 @@ def delete_file_from_s3(s3_key: str) -> None:
 def upload_document(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
+    current_user: dict[str, Any] = Depends(get_current_user),
 ):
+    
     if file.content_type not in ALLOWED_TYPES:
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
@@ -217,7 +222,9 @@ def upload_document(
 )
 def list_documents(
     db: Session = Depends(get_db),
+    current_user: dict[str, Any] = Depends(get_current_user),
 ):
+    
     statement = (
         select(Document)
         .order_by(Document.created_at.desc())
@@ -235,6 +242,7 @@ def list_documents(
 def get_document(
     document_id: uuid.UUID,
     db: Session = Depends(get_db),
+    current_user: dict[str, Any] = Depends(get_current_user),
 ):
     document = db.get(Document, document_id)
 

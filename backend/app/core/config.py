@@ -25,6 +25,10 @@ class Settings(BaseSettings):
     sqs_queue_url: str = ""
     tesseract_path: str = "/usr/bin/tesseract"
 
+    cognito_region: str = "eu-central-1"
+    cognito_user_pool_id: str = "eu-central-1_t23sf3Gb5"
+    cognito_client_id: str = "3pd6tem71q5vf35cbn3rqchhpt"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         extra="ignore",

@@ -131,17 +131,35 @@ function App() {
   ]);
 
   useEffect(() => {
-    const hasActiveDocuments = documents.some((doc) =>
-      doc.status === 'UPLOADED' || doc.status === 'PROCESSING',
-    );
-    if (!hasActiveDocuments) return;
+  const FIVE_MINUTES = 5 * 60 * 1000;
 
-    const timer = window.setInterval(() => {
-      void loadDocuments();
-    }, 2000);
+  const hasRecentActiveDocuments = documents.some((doc) => {
+    const isActive =
+      doc.status === 'UPLOADED' ||
+      doc.status === 'PROCESSING';
 
-    return () => window.clearInterval(timer);
-  }, [documents, loadDocuments]);
+    const documentAge =
+      Date.now() -
+      new Date(doc.created_at).getTime();
+
+    const isRecent =
+      documentAge < FIVE_MINUTES;
+
+    return isActive && isRecent;
+  });
+
+  if (!hasRecentActiveDocuments) {
+    return;
+  }
+
+  const timer = window.setInterval(() => {
+    void loadDocuments();
+  }, 2000);
+
+  return () => {
+    window.clearInterval(timer);
+  };
+}, [documents, loadDocuments]);
 
   useEffect(() => {
     if (!selectedDocument || (selectedDocument.status !== 'UPLOADED' && selectedDocument.status !== 'PROCESSING')) {

@@ -1,7 +1,8 @@
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-
+import logging
+import time
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
@@ -14,7 +15,8 @@ from app.models.document import Document, DocumentStatus
 from app.schemas.document import DocumentListItem, DocumentRead
 from app.services.sqs import send_processing_message
 from typing import Any
-
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 router = APIRouter(prefix="/documents", tags=["documents"])
@@ -94,10 +96,23 @@ def delete_file_from_s3(s3_key: str) -> None:
 def upload_document(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-   
 ):
-    
+    started_at = time.perf_counter()
+    original_filename = file.filename or "document"
+
+    logger.info(
+        "Upload request received: filename=%s content_type=%s",
+        original_filename,
+        file.content_type,
+    )
+
     if file.content_type not in ALLOWED_TYPES:
+        logger.warning(
+            "Upload rejected: unsupported content type filename=%s content_type=%s",
+            original_filename,
+            file.content_type,
+        )
+
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
             detail="Only PDF, PNG, and JPEG documents are supported.",
@@ -110,7 +125,6 @@ def upload_document(
 
     max_bytes = settings.max_upload_mb * 1024 * 1024
     document_id = uuid.uuid4()
-    original_filename = file.filename or "document"
 
     safe_suffix = (
         Path(original_filename).suffix.lower()
@@ -138,10 +152,14 @@ def upload_document(
                 size += len(chunk)
 
                 if size > max_bytes:
+                    logger.warning(
+                        "Upload rejected: file too large document_id=%s size_bytes=%s",
+                        document_id,
+                        size,
+                    )
+
                     raise HTTPException(
-                        status_code=(
-                            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
-                        ),
+                        status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
                         detail=(
                             f"File exceeds the "
                             f"{settings.max_upload_mb} MB limit."
@@ -150,12 +168,24 @@ def upload_document(
 
                 output.write(chunk)
 
+        logger.info(
+            "Uploading document to S3: document_id=%s s3_key=%s size_bytes=%s",
+            document_id,
+            s3_key,
+            size,
+        )
+
         upload_file_to_s3(
             local_path=temporary_destination,
             s3_key=s3_key,
             content_type=file.content_type,
         )
         uploaded_to_s3 = True
+
+        logger.info(
+            "S3 upload completed: document_id=%s",
+            document_id,
+        )
 
         document = Document(
             id=document_id,
@@ -171,8 +201,25 @@ def upload_document(
         db.refresh(document)
         document_saved = True
 
+        logger.info(
+            "Database record created: document_id=%s status=%s",
+            document_id,
+            document.status,
+        )
+
         try:
+            logger.info(
+                "Sending processing message to SQS: document_id=%s",
+                document_id,
+            )
+
             send_processing_message(document.id)
+
+            logger.info(
+                "SQS message sent: document_id=%s",
+                document_id,
+            )
+
         except Exception as exc:
             document.status = DocumentStatus.failed
             document.error_message = (
@@ -180,10 +227,21 @@ def upload_document(
             )
             db.commit()
 
+            logger.exception(
+                "Unable to send processing message: document_id=%s",
+                document_id,
+            )
+
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,
                 detail="Document uploaded, but queueing failed.",
             ) from exc
+
+        logger.info(
+            "Upload request completed: document_id=%s duration_ms=%s",
+            document_id,
+            int((time.perf_counter() - started_at) * 1000),
+        )
 
         return document
 
@@ -193,6 +251,11 @@ def upload_document(
     except (ClientError, BotoCoreError) as exc:
         db.rollback()
 
+        logger.exception(
+            "AWS operation failed during upload: document_id=%s",
+            document_id,
+        )
+
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"AWS operation failed: {exc}",
@@ -200,6 +263,11 @@ def upload_document(
 
     except Exception:
         db.rollback()
+
+        logger.exception(
+            "Unexpected upload failure: document_id=%s",
+            document_id,
+        )
         raise
 
     finally:
@@ -209,12 +277,17 @@ def upload_document(
         if uploaded_to_s3 and not document_saved:
             try:
                 delete_file_from_s3(s3_key)
-            except Exception as cleanup_error:
-                print(
-                    "Unable to remove S3 object after failure:",
-                    repr(cleanup_error),
+
+                logger.info(
+                    "Removed orphaned S3 object: document_id=%s",
+                    document_id,
                 )
 
+            except Exception:
+                logger.exception(
+                    "Unable to remove orphaned S3 object: document_id=%s",
+                    document_id,
+                )
 
 @router.get(
     "",

@@ -1,6 +1,13 @@
 # 🏥 MedFlow AI
 
-An AI-powered **serverless medical document processing platform** built on AWS.
+![Python](https://img.shields.io/badge/Python-3.12-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-green)
+![React](https://img.shields.io/badge/React-TypeScript-61DAFB)
+![AWS](https://img.shields.io/badge/AWS-Serverless-orange)
+![Docker](https://img.shields.io/badge/Docker-Container-blue)
+![License](https://img.shields.io/badge/License-MIT-green)
+
+> An AI-powered **serverless medical document processing platform** built on AWS.
 
 MedFlow AI enables healthcare documents to be securely uploaded, processed asynchronously using OCR and Generative AI, and transformed into structured medical information. The application demonstrates a modern cloud-native backend architecture using AWS serverless services, event-driven processing, and production-style monitoring.
 
@@ -22,18 +29,19 @@ https://d1d8yct7oy0z3l.cloudfront.net
 > Authentication is required. Please contact me if you would like demo credentials.
 # 🚀 Features
 
-- Secure user authentication with **Amazon Cognito**
+- Secure user authentication with **AWS Cognito**
 - Upload **PDF, PNG, and JPEG** medical documents
-- AI-powered document analysis using **Amazon Bedrock**
+- AI-powered document analysis using **AWS Bedrock**
 - OCR text extraction using **Tesseract OCR**
 - Real-time document processing status updates
 - Smart frontend polling for active document processing
-- Asynchronous processing with **Amazon SQS**
+- Asynchronous processing with **AWS SQS**
 - Dead Letter Queue (DLQ) for failed message handling
-- Container images managed using **Docker and Amazon ECR**
+- Container images managed using **Docker and AWS ECR**
 - Containerized **FastAPI** backend deployed on **AWS Lambda**
-- Structured document metadata stored in **Amazon RDS PostgreSQL**
-- Structured application logging with **Amazon CloudWatch**
+- Structured document metadata stored in **AWS RDS PostgreSQL**
+- Structured application logging with **AWS CloudWatch**
+- Credentials stored in **AWS Secrets Manager** 
 - Distributed tracing using **AWS X-Ray** and **CloudWatch Application Signals**
 - End-to-end request traceability using **document_id**
 - Fully serverless, event-driven cloud architecture
@@ -41,41 +49,29 @@ https://d1d8yct7oy0z3l.cloudfront.net
 ---
 # 📸 Screenshots
 
-## 🏠 Homepage
+| 🏠Home | 🔐Login Page |
+|--------|-----------|
+| ![](docs/images/HomePage.png) | ![](docs/images/LoginPage.png) |
 
-![Homepage](docs/images/Homepage.png)
+| 📊Dashboard | 📤Document Processing|   
+|--------|-----------|
+| ![](docs/images/Dashboard.png) | ![](docs/images/DocumentProcessing.png) |
 
----
+| 🤖Document Analysis | |
+|--------|------------|
+| ![](docs/images/DocumentAnalysis.png) | ![](docs/images/DucumentAnalysis2.png) |
 
-## 🔐 Login
-
-![Login](docs/images/Login.png)
-
----
-
-## 📊 Dashboard
-
-![Dashboard](docs/images/Dashboard.png)
-
----
-
-## 📤 Upload & Processing
-
-![Processing](docs/images/processing.png)
-
----
-
-## 🤖 AI Document Analysis
-
-![Analysis 1](docs/images/analysis-1.png)
-
-![Analysis 2](docs/images/analysis-2.png)
-
-
-
+| Monitoring | Documents |
+|--------|------------|
+| ![](docs/images/Monitoring.png) | ![](docs/images/Documents.png) |
 
 
 # 🏗️ Architecture
+
+
+![Architecture](docs/images/Architecture.png)
+
+
 
 ```text
                           React + TypeScript
@@ -118,8 +114,6 @@ https://d1d8yct7oy0z3l.cloudfront.net
       Amazon SQS Dead Letter Queue
 ```
 
----
-
 # ⚙️ Technology Stack
 
 ## Frontend
@@ -159,52 +153,6 @@ https://d1d8yct7oy0z3l.cloudfront.net
 
 ---
 
-# 📄 Document Processing Flow
-
-```text
-Upload Document
-        │
-        ▼
-React Frontend
-        │
-        ▼
-CloudFront
-        │
-        ▼
-API Gateway
-        │
-        ▼
-FastAPI Lambda
-        │
-        ├── Upload document to Amazon S3
-        ├── Save metadata to Amazon RDS
-        └── Publish Amazon SQS message
-                    │
-                    ▼
-           Worker Lambda
-                    │
-        Download file from Amazon S3
-                    │
-                    ▼
-            Tesseract OCR
-                    │
-                    ▼
-          Amazon Bedrock
-                    │
-                    ▼
-        Update PostgreSQL
-                    │
-                    ▼
-        Processing Completed
-
-       Processing Failure
-                    │
-                    ▼
-     Amazon SQS Dead Letter Queue
-```
-
----
-
 # 📊 Monitoring & Observability
 
 MedFlow AI includes production-style observability for debugging and monitoring distributed serverless applications.
@@ -228,6 +176,7 @@ MedFlow AI includes production-style observability for debugging and monitoring 
 * Amazon Cognito authentication
 * IAM least-privilege roles
 * HTTPS through CloudFront and API Gateway
+* Credentials stored in AWS Secrets Manager
 * PostgreSQL deployed inside a private Amazon VPC
 * Secure document storage in Amazon S3
 * Containerized Lambda execution using Amazon ECR
@@ -338,14 +287,15 @@ http://localhost:5173
 
 # 📚 Documentation
 
-Additional documentation is available in the **docs/** directory.
+Explore the technical design and implementation details of MedFlow AI.
 
-* Architecture Overview
-* AWS Deployment
-* Monitoring & Observability
-* API Reference
-* System Design
-
+| Document | Description |
+|----------|-------------|
+| [🏗️ Architecture](docs/architecture.md) | High-level system architecture, request flow, component responsibilities, and scalability considerations. |
+| [☁️ AWS Deployment](docs/aws-deployment.md) | AWS infrastructure, networking, deployment strategy, and serverless architecture. |
+| [📊 Monitoring & Observability](docs/monitoring.md) | CloudWatch logging, Application Signals, AWS X-Ray tracing, and monitoring workflows. |
+| [🔌 API Reference](docs/api.md) | REST API endpoints, request/response examples, and status codes. |
+| [⚖️ Architecture Decisions](docs/decisions.md) | Design decisions, trade-offs, and rationale behind the chosen technologies and architecture. |
 ---
 
 # 🚧 Future Improvements
